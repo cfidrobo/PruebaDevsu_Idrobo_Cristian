@@ -1,0 +1,120 @@
+name: CI Pipeline
+
+on:
+  push:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
+  IMAGE_REPO: ${{ github.event.repository.name }}
+
+jobs:
+  # 1) VALIDATE: asegurar que venga de main
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure branch is main
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "🚫 Not on main (${GITHUB_REF}). Exiting."
+            exit 1
+          fi
+          echo "✅ On main, proceeding."
+
+  # 2) BUILD: instalar deps y (opcional) build
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (if defined)
+        run: npm run build || echo "No build step"
+
+  # 3) TEST: correr unit tests
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Run tests
+        run: npm test
+
+  # 4) VULNERABILITY SCAN: OWASP Dependency-Check
+  vulnerability:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: OWASP Dependency-Check
+        uses: owasp/dependency-check-action@v2
+        with:
+          project: ${{ github.repository }}
+          scan: '.'
+          format: 'ALL'
+          out: 'dependency-check-report'
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: dependency-check-report
+
+  # 5) SONAR ANALYSIS: SonarCloud en lugar de ESLint/coverage
+  sonar-analysis:
+    needs: vulnerability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install deps (incluye sonar-scanner si lo usas como dev-dep)
+        run: npm ci
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          npx sonar-scanner \
+            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.sources=src \
+            -Dsonar.tests=tests \
+            -Dsonar.test.inclusions="**/*.test.js"
+
+  # 6) BUILD & PUSH: image tagged con SHA corta y 'latest'
+  docker-publish:
+    needs: sonar-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+      - name: Determine image tag
+        id: tag
+        run: echo "sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      - name: Build & push
+        run: |
+          IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_REPO }}
+          docker build -t $IMAGE:${{ steps.tag.outputs.sha }} -t $IMAGE:latest .
+          docker push $IMAGE:${{ steps.tag.outputs.sha }}
+          docker push $IMAGE:latest
