@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: nodejs-app
-          image: ghcr.io/${{ github.repository_owner }}/pruebadevsu_idrobo_cristian:latest
+          image: ghcr.io/cfidrobo/pruebadevsu_idrobo_cristian:latest
           ports:
             - containerPort: 8000
           envFrom:
