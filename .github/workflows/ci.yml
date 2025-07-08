@@ -139,7 +139,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set image tag
         id: vars
-        shell: pwsh
+        shell: powershell
         run: |
           $sha = $Env:GITHUB_SHA.Substring(0,8)
           Add-Content -Path $Env:GITHUB_OUTPUT -Value "sha=$sha"
