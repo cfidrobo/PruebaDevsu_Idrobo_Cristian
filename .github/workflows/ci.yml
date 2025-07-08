@@ -100,6 +100,7 @@ jobs:
             -Dsonar.sources=. \
             -Dsonar.tests=. \
             -Dsonar.test.inclusions="**/*.test.js"
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
   # 6) BUILD & PUSH: image tagged con SHA corta y 'latest'
   docker-publish:
