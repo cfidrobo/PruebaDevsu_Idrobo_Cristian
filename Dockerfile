@@ -8,8 +8,8 @@ WORKDIR /usr/src/app
 
 # Sólo deps de prod
 COPY package*.json ./
-RUN npm ci --only=production
-
+RUN npm ci 
+RUN npm prune --production
 # Copiar código
 COPY . .
 
