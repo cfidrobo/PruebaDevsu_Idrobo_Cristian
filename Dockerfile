@@ -12,6 +12,7 @@ RUN npm ci
 RUN npm prune --production
 # Copiar código
 COPY . .
+RUN chown -R appuser:appgroup /usr/src/app
 
 # Cambiar a usuario sin privilegios
 USER appuser
