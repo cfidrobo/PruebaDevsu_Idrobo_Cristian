@@ -138,6 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Debug shells
+        shell: cmd
         run: |
           echo "Default shell = %COMSPEC%"
           where bash   || echo "bash NOT found"
