@@ -17,6 +17,7 @@ spec:
       containers:
         - name: nodejs-app
           image: ghcr.io/cfidrobo/pruebadevsu_idrobo_cristian:latest
+          imagePullPolicy: Always 
           ports:
             - containerPort: 8000
           envFrom:

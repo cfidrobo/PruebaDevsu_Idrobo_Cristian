@@ -157,19 +157,11 @@ jobs:
           REM Contexto minikube
           kubectl config use-context minikube
           kubectl apply -f k8s/deployment.yaml
-          REM Aplica ConfigMap y Secret
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
 
-          REM Construye la etiqueta de imagen (primeros 8 chars)
-          set "sha=%GITHUB_SHA:~0,8%"
-          set "IMAGE=ghcr.io/%GITHUB_REPOSITORY_OWNER%/pruebadevsu_idrobo_cristian:%sha%"
-
-          echo Updating deployment to !IMAGE!
-          kubectl set image deployment/nodejs-app nodejs-app=!IMAGE! --record
-
-          REM Espera al rollout
-          kubectl rollout status deployment/nodejs-app --timeout=120s
+          REM Forzar rollout para que tire la última imagen latest
+          kubectl rollout restart deployment/nodejs-app --timeout=120s
 
           REM Service y HPA
           kubectl apply -f k8s/service.yaml
