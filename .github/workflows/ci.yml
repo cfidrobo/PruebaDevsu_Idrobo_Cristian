@@ -135,27 +135,45 @@ jobs:
   deploy-k8s:
     needs: docker-publish
     runs-on: self-hosted
+    # Apuntar al config de tu usuario para que minikube funcione
+    env:
+      KUBECONFIG: C:\Users\Cristian\.kube\config
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to local K8s
-        shell: bash
-        env:
-          # Apunta al config de tu usuario Windows
-          KUBECONFIG: /c/Users/Cristian/.kube/config
+      - name: Check context
+        shell: cmd
         run: |
-          set -e
-          echo "Using kubeconfig at $KUBECONFIG"
+          echo KUBECONFIG = %KUBECONFIG%
           kubectl config current-context
+          kubectl get nodes
 
-          # Aplica tus manifests
+      - name: Deploy to local K8s
+        shell: cmd
+        run: |
+          setlocal enabledelayedexpansion
+
+          REM Contexto minikube
+          kubectl config use-context minikube
+
+          REM Aplica ConfigMap y Secret
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
 
-          IMAGE=ghcr.io/${{ github.repository_owner }}/pruebadevsu_idrobo_cristian:${GITHUB_SHA::8}
-          kubectl set image deployment/nodejs-app nodejs-app=$IMAGE --record
+          REM Construye la etiqueta de imagen (primeros 8 chars)
+          set "sha=%GITHUB_SHA:~0,8%"
+          set "IMAGE=ghcr.io/%GITHUB_REPOSITORY_OWNER%/pruebadevsu_idrobo_cristian:%sha%"
+
+          echo Updating deployment to !IMAGE!
+          kubectl set image deployment/nodejs-app nodejs-app=!IMAGE! --record
+
+          REM Espera al rollout
           kubectl rollout status deployment/nodejs-app --timeout=120s
 
+          REM Service y HPA
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/hpa.yaml
+
+          endlocal
 
