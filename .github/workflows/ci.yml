@@ -120,7 +120,8 @@ jobs:
         run: echo "sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
       - name: Build & push
         run: |
-          IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ env.IMAGE_REPO }}
+          REPO_LOWER=$(echo "${{ env.IMAGE_REPO }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/$REPO_LOWER
           docker build -t $IMAGE:${{ steps.tag.outputs.sha }} -t $IMAGE:latest .
           docker push $IMAGE:${{ steps.tag.outputs.sha }}
           docker push $IMAGE:latest
