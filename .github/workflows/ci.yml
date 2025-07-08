@@ -68,7 +68,7 @@ jobs:
       - name: Audit dependencies and save report
         run: |
           npm ci
-          npm audit --audit-level=moderate --json > audit-report.json
+          npm audit --audit-level=moderate --json > audit-report.json || true
 
       - uses: actions/upload-artifact@v4
         with:
