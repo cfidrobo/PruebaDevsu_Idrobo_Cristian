@@ -137,15 +137,32 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+
       - name: Deploy to local K8s
-        shell: bash
+        shell: powershell
         run: |
+          # Permite scripts solo para este proceso
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+
+          # Selecciona tu contexto (minikube)
           kubectl config use-context minikube
+
+          # Aplica ConfigMap y Secret
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
-          IMAGE=ghcr.io/${{ github.repository_owner }}/pruebadevsu_idrobo_cristian:${GITHUB_SHA::8}
-          kubectl set image deployment/nodejs-app nodejs-app=$IMAGE --record
+
+          # Construye la etiqueta de imagen con los primeros 8 chars del SHA
+          $sha = $Env:GITHUB_SHA.Substring(0,8)
+          $owner = $Env:GITHUB_REPOSITORY_OWNER.ToLower()
+          $image = "ghcr.io/$owner/pruebadevsu_idrobo_cristian:$sha"
+
+          # Actualiza el deployment con la nueva imagen
+          kubectl set image deployment/nodejs-app nodejs-app=$image --record
+
+          # Espera al rollout
           kubectl rollout status deployment/nodejs-app --timeout=120s
+
+          # Aplica Service y HPA
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/hpa.yaml
 
