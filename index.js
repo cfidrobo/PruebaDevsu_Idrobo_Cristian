@@ -12,6 +12,9 @@ sequelize.sync({ force: true }).then(() => {
      })
 
 app.use(express.json())
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' })
+})
 app.use('/api/users', usersRouter)
 
 const server = app.listen(PORT, () => {
