@@ -156,7 +156,7 @@ jobs:
 
           REM Contexto minikube
           kubectl config use-context minikube
-
+          kubectl apply -f k8s/deployment.yaml
           REM Aplica ConfigMap y Secret
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
