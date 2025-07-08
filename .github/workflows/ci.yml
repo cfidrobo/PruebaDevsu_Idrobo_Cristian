@@ -137,25 +137,15 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - name: Set image tag
-        id: vars
-        shell: cmd
-        run: |
-          rem Extrae los primeros 8 caracteres de GITHUB_SHA
-          set "sha=%GITHUB_SHA:~0,8%"
-          rem Escríbelo donde GitHub Actions espera las salidas
-          echo sha=%sha%>>%GITHUB_OUTPUT%
       - name: Deploy to local K8s
+        shell: bash
         run: |
-          # Elige el contexto de tu cluster local
           kubectl config use-context minikube
-          # Aplica ConfigMap y Secret
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/secret.yaml
-          # Despliega con la imagen recién subida
-          IMAGE=ghcr.io/${{ github.repository_owner }}/pruebadevsu_idrobo_cristian:${{ steps.vars.outputs.sha }}
-          sed "s|ghcr.io/.*/pruebadevsu_idrobo_cristian:.*|$IMAGE|g" k8s/deployment.yaml \
-            | kubectl apply -f -
-          # Service y HPA
+          IMAGE=ghcr.io/${{ github.repository_owner }}/pruebadevsu_idrobo_cristian:${GITHUB_SHA::8}
+          kubectl set image deployment/nodejs-app nodejs-app=$IMAGE --record
+          kubectl rollout status deployment/nodejs-app --timeout=120s
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/hpa.yaml
+
