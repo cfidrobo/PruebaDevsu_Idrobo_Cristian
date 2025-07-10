@@ -53,8 +53,8 @@ jobs:
           NODE_ENV: test
         run: npm test
 
-  # 4) VULNERABILITY SCAN: OWASP Dependency-Check
-    # 4) VULNERABILITY SCAN: npm audit (versión abreviada)
+
+  # 4) VULNERABILITY SCAN: npm audit
   vulnerability:
     needs: test
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
           path: audit-report.json
 
 
-  # 5) SONAR ANALYSIS: SonarCloud en lugar de ESLint/coverage
+  # 5) SONAR ANALYSIS: SonarCloud
   sonar-analysis:
     needs: vulnerability
     runs-on: ubuntu-latest
@@ -135,7 +135,6 @@ jobs:
   deploy-k8s:
     needs: docker-publish
     runs-on: self-hosted
-    # Apuntar al config de tu usuario para que minikube funcione
     env:
       KUBECONFIG: C:\Users\Cristian\.kube\config
 
