@@ -105,7 +105,13 @@ Una vez desplegada la app, puedes probar los endpoints:
 - `GET /health`
 
 ---
+## 🔍 Enlaces
+https://sonarcloud.io/project/overview?id=cfidrobo_PruebaDevsu_Idrobo_Cristian
 
+https://github.com/cfidrobo/PruebaDevsu_Idrobo_Cristian
+
+https://github.com/cfidrobo/PruebaDevsu_Idrobo_Cristian/actions
+---
 ## 📬 Contacto
 
 Cristian Fernando Idrobo Montalvo  
