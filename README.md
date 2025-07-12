@@ -9,7 +9,13 @@ Este proyecto corresponde a la prueba técnica DevOps para **Devsu**, usando una
 - Escaneo de vulnerabilidades
 
 ---
-
+##  Pasos para ejecutar el proyecto
+- Clonar el repositorio usando git clone
+- En la terminal del repositorio clonado ejecutar:
+```bash
+npm install
+```
+---
 ## 🐳 Dockerización
 
 El proyecto cuenta con un `Dockerfile` optimizado para producción:
